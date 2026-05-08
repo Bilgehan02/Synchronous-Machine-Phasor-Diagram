@@ -314,9 +314,11 @@ function solveCyl(Emag, P, Ra, Xs, isMot){
     eInt =[Vref+Ix*Ra-Xsig*Iy,     Iy*Ra+Xsig*Ix           ];
     cS=[Vref,0]; cE=[Ex,Ey];
   } else {
-    p1   =[Ex+Ix*Ra,               Ey+Iy*Ra                ];
-    eInt =[Ex+Ix*Ra-Xsig*Iy,       Ey+Iy*Ra+Xsig*Ix        ];
-    cS=[Ex,Ey]; cE=[Vref,0];
+    // MOTOR: zincir V'den başlar, Ef'ye doğru azaltarak gider
+    // V → (V − I·Ra) → (−jI·Xσ) → (−jI·Xa) → Ef
+    p1   =[Vref - Ix*Ra,             -Iy*Ra                  ];   // V − I·Ra
+    eInt =[Vref - Ix*Ra + Xsig*Iy,  -Iy*Ra - Xsig*Ix        ];   // P1 − jI·Xσ
+    cS=[Vref,0]; cE=[Ex,Ey];                                       // V → … → Ef
   }
   return { Ix,Iy,Ex,Ey,del,phi,Imag:Math.hypot(Ix,Iy),Q:Vref*(-Iy),
            p1,eInt,cS,cE,type:'cyl' };
@@ -403,11 +405,14 @@ function solveSal(Emag, P, Ra, Xd, Xq, isMot){
     // Ef = D + (-I1d*Xad)*(cd,sd) → negative I1d means field strengthening
     cS=[Vref,0]; cE=[Ex,Ey];
   } else {
-    // start from Ef
-    p1   =[Ex+Ix*Ra,                      Ey+Iy*Ra                    ];
-    eInt =[Ex+Ix*Ra-X_SIG*Iy,             Ey+Iy*Ra+X_SIG*Ix           ];
-    D    =[eInt[0]+I1q*Xaq*(-sd),         eInt[1]+I1q*Xaq*cd          ];
-    cS=[Ex,Ey]; cE=[Vref,0];
+    // MOTOR: zincir V'den başlar, Ef'ye doğru azaltarak gider
+    // V → (V−I·Ra) → (−jI·Xσ) → (−Eaq) → (+Ead) → Ef
+    p1   =[Vref - Ix*Ra,                   -Iy*Ra                     ];  // V − I·Ra
+    eInt =[Vref - Ix*Ra + X_SIG*Iy,        -Iy*Ra - X_SIG*Ix          ];  // P1 − jI·Xσ
+    // −Eaq: subtract I1q·Xaq in d-hat direction (−d = +sinδ, −cosδ)
+    D    =[eInt[0] + I1q*Xaq*sd,            eInt[1] - I1q*Xaq*cd      ];
+    // D → Ef: add I1d·Xad·q-hat (cosδ, sinδ)
+    cS=[Vref,0]; cE=[Ex,Ey];
   }
 
   // B point: direction gives q-axis (= Ef direction)
