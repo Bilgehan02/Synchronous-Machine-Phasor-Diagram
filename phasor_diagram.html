@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Synchronous Machine – Phasor Diagram</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090f; --panel:#0d1117; --card:#111827; --border:#1e2d45;
+  --txt:#e8edf5; --dim:#4b5a72; --dim2:#2a3a52;
+  --blue:#4f8ef7; --red:#e05555; --green:#34d399;
+  --cV:#dde6f5; --cI:#f87171; --cEf:#60a5fa; --cE:#5a7090;
+  --cRa:#c084fc; --cXs:#34d399; --cXa:#fb923c;
+  --cEaq:#f59e0b; --cEad:#38bdf8;
+  --cd:#ff6b6b; --cq:#4ade80;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:var(--bg); color:var(--txt);
+  font-family:'Inter',sans-serif;
+  display:flex; flex-direction:column; align-items:center;
+  min-height:100vh; padding:10px 10px 24px; gap:8px;
+}
+
+/* ── TITLE ── */
+.title-wrap{ text-align:center; margin:4px 0 2px; }
+.title-main{
+  font-family:'Cinzel',serif;
+  font-size:1.28em; font-weight:700; letter-spacing:4px;
+  color:#8cb4e0; text-transform:uppercase; line-height:1.2;
+}
+.title-sub{
+  font-family:'Cinzel',serif;
+  font-size:.72em; font-weight:400; letter-spacing:3px;
+  color:var(--dim); margin-top:2px;
+}
+
+/* ── TOGGLE ROW ── */
+.toggle-row{
+  display:flex; flex-direction:row; gap:10px; align-items:center;
+  flex-wrap:wrap; justify-content:center;
+}
+.pill{
+  display:flex; background:var(--card);
+  border:1px solid var(--border); border-radius:30px;
+  padding:3px; gap:3px;
+}
+.p-btn{
+  padding:6px 22px; border:none; cursor:pointer;
+  border-radius:24px; font-size:.82em; font-weight:600;
+  letter-spacing:.8px; font-family:'Inter',sans-serif;
+  transition:all .2s; background:transparent; color:var(--dim);
+}
+.p-btn.on-gen{ background:#1d3a7a; color:#90c0ff; box-shadow:0 0 12px #4f8ef730;}
+.p-btn.on-mot{ background:#6b1a1a; color:#ffaaaa; box-shadow:0 0 12px #e0555530;}
+.p-btn.on-cyl{ background:#1a3d30; color:#7effd4; box-shadow:0 0 10px #34d39930;}
+.p-btn.on-sal{ background:#3d2a00; color:#ffd580; box-shadow:0 0 10px #f59e0b30;}
+.sep{ color:var(--dim2); font-size:.9em; }
+
+/* ── LAYOUT ── */
+.layout{
+  display:flex; flex-direction:row; gap:12px;
+  width:100%; max-width:1060px; align-items:flex-start;
+}
+.canvas-wrap{
+  flex:1; min-width:0; border:1px solid var(--border);
+  border-radius:10px; overflow:hidden; background:#050910;
+}
+canvas{ display:block; width:100%; height:auto; }
+
+/* ── RIGHT PANEL ── */
+.rp{ width:210px; flex-shrink:0; display:flex; flex-direction:column; gap:8px; }
+.card{
+  background:var(--card); border:1px solid var(--border);
+  border-radius:8px; padding:10px 11px 9px;
+  display:flex; flex-direction:column; gap:7px;
+}
+.ctitle{
+  font-size:.62em; letter-spacing:2px; text-transform:uppercase;
+  color:var(--dim); font-weight:600;
+}
+
+/* ── VERTICAL SLIDERS ── */
+.vsl-row{ display:flex; justify-content:space-around; align-items:flex-end; padding:2px 0; }
+.vsl{ display:flex; flex-direction:column; align-items:center; gap:5px; }
+.vsl-name{ font-family:'Cinzel',serif; font-size:1.5em; font-weight:700; color:var(--txt); line-height:1; }
+input[type=range].vert{
+  writing-mode:vertical-lr; direction:rtl;
+  width:28px; height:125px; cursor:pointer; accent-color:var(--blue);
+}
+.vsl-num{ font-size:.73em; color:var(--dim); text-align:center; font-variant-numeric:tabular-nums; }
+
+/* ── HORIZ SLIDERS ── */
+.hsl{ display:flex; flex-direction:column; gap:2px; }
+.hsl-head{ display:flex; justify-content:space-between; font-size:.73em; }
+.hsl-head b{ color:var(--blue); }
+input[type=range].horiz{ width:100%; cursor:pointer; accent-color:var(--blue); }
+
+/* ── INFO GRID ── */
+.igrid{ display:grid; grid-template-columns:1fr 1fr; gap:4px; }
+.ib{ background:#0a1322; border:1px solid var(--border); border-radius:5px; padding:4px 5px; text-align:center; }
+.ib .lbl{ font-size:.62em; color:var(--dim); }
+.ib .val{ font-size:1em; font-weight:600; font-variant-numeric:tabular-nums; }
+
+/* ── OP BADGE ── */
+.opb{ border-radius:7px; padding:8px 9px; text-align:center; border:1.5px solid var(--border); transition:all .3s; }
+.opb .ob-l{ font-size:.6em; color:var(--dim); letter-spacing:1.5px; text-transform:uppercase; }
+.opb .ob-v{ font-size:.85em; font-weight:700; margin-top:2px; }
+.opi{ border-color:#1d4ed8; background:#0a1428; } .opi .ob-v{ color:#60a5fa; }
+.opc{ border-color:#047857; background:#031a10; } .opc .ob-v{ color:#34d399; }
+.opo{ border-color:#92400e; background:#150f00; } .opo .ob-v{ color:#fbbf24; }
+
+/* ── PARAMS NOTE ── */
+.pnote{ font-size:.67em; color:var(--dim2); background:#08101e; border-radius:4px; padding:4px 7px; line-height:1.5; }
+.pnote b{ color:#94a3b8; }
+
+/* ── LEGEND ── */
+.lgd{ display:flex; flex-direction:column; gap:3px; }
+.lr{ display:flex; align-items:center; gap:5px; font-size:.7em; color:var(--dim); }
+.ll{ width:20px; height:3px; border-radius:2px; flex-shrink:0; }
+.ll-d{ background:transparent; border-top:2px dashed; height:0; }
+
+/* ── WARN ── */
+.warn{ font-size:.72em; font-weight:600; color:#f87171; text-align:center; min-height:14px; }
+
+/* ── SALIENT EXTRAS (hidden by default) ── */
+.salient-only{ display:none; }
+.cyl-only{ display:flex; flex-direction:column; gap:7px; }
+body.salient .salient-only{ display:flex; flex-direction:column; gap:7px; }
+body.salient .cyl-only{ display:none; }
+</style>
+</head>
+<body>
+
+<div class="title-wrap">
+  <div class="title-main">Synchronous Machine Phasor Diagram</div>
+  <div class="title-sub">Interactive Educational Simulation</div>
+</div>
+
+<!-- toggles -->
+<div class="toggle-row">
+  <div class="pill" id="pillMode">
+    <button class="p-btn on-gen" id="btnGen" onclick="setMode('gen')">⚡ Generator</button>
+    <button class="p-btn"        id="btnMot" onclick="setMode('mot')">⚙ Motor</button>
+  </div>
+  <span class="sep">|</span>
+  <div class="pill" id="pillType">
+    <button class="p-btn on-cyl" id="btnCyl" onclick="setType('cyl')">Cylindrical Rotor</button>
+    <button class="p-btn"        id="btnSal" onclick="setType('sal')">Salient Pole</button>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="canvas-wrap">
+    <canvas id="cv" width="700" height="520"></canvas>
+  </div>
+
+  <div class="rp">
+
+    <!-- E & T -->
+    <div class="card">
+      <div class="ctitle">Excitation &amp; Load</div>
+      <div class="vsl-row">
+        <div class="vsl">
+          <div class="vsl-name">E</div>
+          <input type="range" class="vert" id="slE" min="0.20" max="2.50" step="0.01" value="1.40">
+          <div class="vsl-num" id="vE">1.40 pu</div>
+        </div>
+        <div class="vsl">
+          <div class="vsl-name">T</div>
+          <input type="range" class="vert" id="slT" min="0.00" max="1.50" step="0.01" value="0.55">
+          <div class="vsl-num" id="vT">0.55 pu</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Machine params -->
+    <div class="card">
+      <div class="ctitle">Machine Parameters</div>
+
+      <!-- Ra always shown -->
+      <div class="hsl">
+        <div class="hsl-head">Rₐ (resistance) <b id="vRa">0.050</b> pu</div>
+        <input type="range" class="horiz" id="slRa" min="0.00" max="0.30" step="0.005" value="0.05">
+      </div>
+
+      <!-- Cylindrical: Xa -->
+      <div class="cyl-only">
+        <div class="hsl">
+          <div class="hsl-head">Xₐ (armature react.) <b id="vXa">0.90</b> pu</div>
+          <input type="range" class="horiz" id="slXa" min="0.10" max="1.60" step="0.01" value="0.90">
+        </div>
+        <div class="pnote">Xσ = 0.10 pu (fixed) &nbsp;|&nbsp; <b>Xₛ = <span id="vXs">1.00</span> pu</b></div>
+      </div>
+
+      <!-- Salient: Xd, Xq -->
+      <div class="salient-only">
+        <div class="hsl">
+          <div class="hsl-head">Xd (d-axis) <b id="vXd">1.50</b> pu</div>
+          <input type="range" class="horiz" id="slXd" min="0.50" max="2.50" step="0.01" value="1.50">
+        </div>
+        <div class="hsl">
+          <div class="hsl-head">Xq (q-axis) <b id="vXq">0.90</b> pu</div>
+          <input type="range" class="horiz" id="slXq" min="0.30" max="1.80" step="0.01" value="0.90">
+        </div>
+        <div class="pnote">Xσ=0.10 fixed &nbsp;|&nbsp; Xad=Xd−Xσ &nbsp;|&nbsp; Xaq=Xq−Xσ<br><b>Xd &gt; Xq</b> required (salient)</div>
+      </div>
+    </div>
+
+    <!-- Operating point -->
+    <div class="card">
+      <div class="ctitle">Operating Point</div>
+      <div class="igrid">
+        <div class="ib"><div class="lbl">cos φ</div><div class="val" id="dCosphi" style="color:var(--cI)">—</div></div>
+        <div class="ib"><div class="lbl">φ (°)</div><div class="val" id="dPhi">—</div></div>
+        <div class="ib"><div class="lbl">δ (°)</div><div class="val" id="dDelta" style="color:var(--cXa)">—</div></div>
+        <div class="ib"><div class="lbl">|I| (pu)</div><div class="val" id="dI" style="color:var(--green)">—</div></div>
+        <div class="ib"><div class="lbl">P (pu)</div><div class="val" id="dP">—</div></div>
+        <div class="ib"><div class="lbl">Q (pu)</div><div class="val" id="dQ">—</div></div>
+      </div>
+    </div>
+
+    <!-- Operating mode -->
+    <div class="opb" id="opBadge">
+      <div class="ob-l">Operating Mode</div>
+      <div class="ob-v" id="opVal">—</div>
+    </div>
+
+    <div class="warn" id="warnMsg"></div>
+
+    <!-- Legend -->
+    <div class="card">
+      <div class="ctitle">Legend</div>
+      <div class="lgd">
+        <div class="lr"><div class="ll" style="background:var(--cEf)"></div><b style="color:var(--cEf)">Ēf</b> Excitation EMF</div>
+        <div class="lr"><div class="ll ll-d" style="border-color:var(--cE)"></div><b style="color:var(--cE)">Ē</b> Intermediate EMF</div>
+        <div class="lr"><div class="ll" style="background:var(--cV)"></div><b style="color:var(--cV)">V̄</b> Terminal voltage</div>
+        <div class="lr"><div class="ll" style="background:var(--cI)"></div><b style="color:var(--cI)">Ī</b> Armature current</div>
+        <div class="lr"><div class="ll" style="background:var(--cRa)"></div>ĪRₐ Resistive drop</div>
+        <div class="lr"><div class="ll" style="background:var(--cXs)"></div>jĪXσ Leakage drop</div>
+        <div class="lr" id="lgCyl"><div class="ll" style="background:var(--cXa)"></div>jĪXₐ Armature react.</div>
+        <div class="lr salient-only" style="display:none" id="lgSalQ"><div class="ll" style="background:var(--cEaq)"></div>Eₐq (q-axis react.)</div>
+        <div class="lr salient-only" style="display:none" id="lgSalD"><div class="ll" style="background:var(--cEad)"></div>Eₐd (d-axis react.)</div>
+        <div class="lr salient-only" style="display:none"><div class="ll ll-d" style="border-color:var(--cq)"></div>q-axis</div>
+        <div class="lr salient-only" style="display:none"><div class="ll ll-d" style="border-color:var(--cd)"></div>d-axis</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══ Constants ═══════════════════════════════════════════════════════════════
+const Vref   = 1.0;   // terminal voltage reference (pu)
+const X_SIG  = 0.10;  // leakage reactance (fixed, pu)
+const cv     = document.getElementById('cv');
+const ctx    = cv.getContext('2d');
+const CW = cv.width, CH = cv.height;
+
+let mode = 'gen';   // 'gen' | 'mot'
+let mtype = 'cyl';  // 'cyl' | 'sal'
+
+// ═══ Mode / Type toggles ═════════════════════════════════════════════════════
+function setMode(m){
+  mode = m;
+  document.getElementById('btnGen').className='p-btn'+(m==='gen'?' on-gen':'');
+  document.getElementById('btnMot').className='p-btn'+(m==='mot'?' on-mot':'');
+  update();
+}
+function setType(t){
+  mtype = t;
+  document.getElementById('btnCyl').className='p-btn'+(t==='cyl'?' on-cyl':'');
+  document.getElementById('btnSal').className='p-btn'+(t==='sal'?' on-sal':'');
+  if(t==='sal') document.body.classList.add('salient');
+  else          document.body.classList.remove('salient');
+  // show/hide salient legend rows
+  document.querySelectorAll('.salient-only').forEach(el=>{
+    el.style.display = t==='sal' ? '' : 'none';
+  });
+  document.getElementById('lgCyl').style.display = t==='cyl' ? '' : 'none';
+  update();
+}
+
+// ═══ Cylindrical solver ══════════════════════════════════════════════════════
+// Gen: Ef = V + I*(Ra+jXs)  →  quadratic in Iy, Ix=P/V
+// Mot: Ef = V - I*(Ra+jXs)  →  quadratic in Iy, Ix=P/V
+function solveCyl(Emag, P, Ra, Xs, isMot){
+  const Ix = P / Vref;
+  let a, b, c;
+  if(!isMot){
+    a = Xs*Xs+Ra*Ra; b = -2*Vref*Xs;
+    c = (Vref+Ix*Ra)**2 + (Ix*Xs)**2 - Emag*Emag;
+  } else {
+    a = Xs*Xs+Ra*Ra; b = 2*Vref*Xs;
+    c = (Vref-Ix*Ra)**2 + (Ix*Xs)**2 - Emag*Emag;
+  }
+  const disc = b*b - 4*a*c;
+  if(disc < 0) return null;
+  const sq = Math.sqrt(disc);
+  const Iy1=(-b+sq)/(2*a), Iy2=(-b-sq)/(2*a);
+  function Efx(Iy){ return isMot ? Vref-Ix*Ra+Xs*Iy : Vref+Ix*Ra-Xs*Iy; }
+  function Efy(Iy){ return isMot ? -Ix*Xs-Ra*Iy     : Ix*Xs+Ra*Iy;      }
+  function d2(Iy){ const x=Efx(Iy),y=Efy(Iy); return x>0 ? Math.abs(Math.atan2(y,x)) : Infinity; }
+  const Iy = d2(Iy1)<=d2(Iy2) ? Iy1 : Iy2;
+  if(!isFinite(d2(Iy))) return null;
+  const Ex=Efx(Iy), Ey=Efy(Iy);
+  const del=Math.atan2(Ey,Ex), phi=-Math.atan2(Iy,Ix);
+  const Xsig=X_SIG, Xa=Xs-X_SIG;
+  // Chain points
+  let p1,eInt,cS,cE;
+  if(!isMot){
+    p1   =[Vref+Ix*Ra,              Iy*Ra                  ];
+    eInt =[Vref+Ix*Ra-Xsig*Iy,     Iy*Ra+Xsig*Ix           ];
+    cS=[Vref,0]; cE=[Ex,Ey];
+  } else {
+    p1   =[Ex+Ix*Ra,               Ey+Iy*Ra                ];
+    eInt =[Ex+Ix*Ra-Xsig*Iy,       Ey+Iy*Ra+Xsig*Ix        ];
+    cS=[Ex,Ey]; cE=[Vref,0];
+  }
+  return { Ix,Iy,Ex,Ey,del,phi,Imag:Math.hypot(Ix,Iy),Q:Vref*(-Iy),
+           p1,eInt,cS,cE,type:'cyl' };
+}
+
+// ═══ Salient-pole solver ════════════════════════════════════════════════════
+// Uses bisection on F(δ)=0.
+// Generator: Ef = V + I·Ra + j·(I1q·Xq + I1d·Xd)  (vector form, Ef along q-axis)
+// Motor    : V  = Ef + I·Ra + j·(I1q·Xq + I1d·Xd)
+function solveSal(Emag, P, Ra, Xd, Xq, isMot){
+  if(Xd <= Xq) Xd = Xq + 0.05;  // enforce salient condition
+  const Ix = P / Vref;
+  const DEL = Xd - Xq;
+
+  // F_gen(δ): cross-multiply equations for Iy from real and imag parts
+  function F_gen(d){
+    const cd=Math.cos(d),sd=Math.sin(d);
+    const alpha = Xq*sd*sd + Xd*cd*cd;
+    const beta  = Ra - DEL*sd*cd;
+    const rA = Vref + Ix*(Ra+DEL*sd*cd) - Emag*cd;
+    const rB = Emag*sd - Ix*(Xq + DEL*sd*sd);
+    return beta*rA - alpha*rB;
+  }
+  // F_mot(δ): analogous for motor (δ<0)
+  function F_mot(d){
+    const cd=Math.cos(d),sd=Math.sin(d);
+    const alpha = Xq*sd*sd + Xd*cd*cd;
+    const beta  =-Ra + DEL*sd*cd;
+    const rA = Emag*cd - Vref + Ix*(Ra+DEL*sd*cd);
+    const rB = Emag*sd + Ix*(Xq + DEL*sd*sd);
+    return beta*rA - alpha*rB;
+  }
+
+  const F   = isMot ? F_mot : F_gen;
+  const lo0 = isMot ? -Math.PI/2+0.002 :  0.002;
+  const hi0 = isMot ? -0.002            :  Math.PI/2-0.002;
+
+  // Scan for sign change
+  const N=200;
+  let lo=lo0, hi=hi0, found=false;
+  const step=(hi0-lo0)/N;
+  for(let i=0;i<N;i++){
+    const a=lo0+i*step, b=a+step;
+    if(F(a)*F(b)<0){ lo=a; hi=b; found=true; break; }
+  }
+  if(!found) return null;
+
+  // Bisection
+  for(let i=0;i<80;i++){
+    const mid=(lo+hi)/2;
+    if(Math.abs(hi-lo)<1e-9) break;
+    if(F(lo)*F(mid)<=0) hi=mid; else lo=mid;
+  }
+  const delta=(lo+hi)/2;
+  const cd=Math.cos(delta), sd=Math.sin(delta);
+  const alpha = Xq*sd*sd + Xd*cd*cd;
+
+  // Recover Iy
+  let Iy;
+  if(!isMot){
+    Iy = (Vref + Ix*(Ra+DEL*sd*cd) - Emag*cd) / alpha;
+  } else {
+    Iy = (Emag*cd - Vref + Ix*(Ra+DEL*sd*cd)) / alpha;
+  }
+
+  const Ex=Emag*cd, Ey=Emag*sd;
+  const phi=-Math.atan2(Iy,Ix);
+
+  // d-q decomposition
+  const I1q = Ix*cd + Iy*sd;
+  const I1d =-Ix*sd + Iy*cd;
+  const Xaq=Xq-X_SIG, Xad=Xd-X_SIG;
+
+  // Chain points (same sign-convention as cylindrical: gen=V→Ef, mot=Ef→V)
+  // d-axis unit: (-sinδ, cosδ), q-axis unit: (cosδ, sinδ)
+  let p1,eInt,D,cS,cE;
+  if(!isMot){
+    // start from V
+    p1   =[Vref+Ix*Ra,                    Iy*Ra                       ];
+    eInt =[Vref+Ix*Ra-X_SIG*Iy,           Iy*Ra+X_SIG*Ix              ]; // E (point A)
+    // Eaq drop: from eInt, move in d-direction by I1q*Xaq
+    D    =[eInt[0]+I1q*Xaq*(-sd),         eInt[1]+I1q*Xaq*cd          ];
+    // Ead drop: from D, move in (-q)-direction by I1d*Xad → reach Ef
+    // Ef = D + (-I1d*Xad)*(cd,sd) → negative I1d means field strengthening
+    cS=[Vref,0]; cE=[Ex,Ey];
+  } else {
+    // start from Ef
+    p1   =[Ex+Ix*Ra,                      Ey+Iy*Ra                    ];
+    eInt =[Ex+Ix*Ra-X_SIG*Iy,             Ey+Iy*Ra+X_SIG*Ix           ];
+    D    =[eInt[0]+I1q*Xaq*(-sd),         eInt[1]+I1q*Xaq*cd          ];
+    cS=[Ex,Ey]; cE=[Vref,0];
+  }
+
+  // B point: direction gives q-axis (= Ef direction)
+  // Gen: B = V + I*(Ra+jXq), Mot: B = V - I*(Ra+jXq)
+  const B = !isMot
+    ? [Vref+Ix*Ra-Xq*Iy, Iy*Ra+Xq*Ix]
+    : [Vref-Ix*Ra+Xq*Iy,-Iy*Ra-Xq*Ix];
+
+  return { Ix,Iy,Ex,Ey,del:delta,phi,Imag:Math.hypot(Ix,Iy),Q:Vref*(-Iy),
+           p1,eInt,D,B,cS,cE,I1q,I1d,Xaq,Xad,type:'sal' };
+}
+
+// ═══ Auto-scale transform ════════════════════════════════════════════════════
+function makeXf(pts){
+  const xs=pts.map(p=>p[0]), ys=pts.map(p=>p[1]);
+  let xmn=Math.min(...xs)-0.20, xmx=Math.max(...xs)+0.20;
+  let ymn=Math.min(...ys)-0.16, ymx=Math.max(...ys)+0.16;
+  xmn=Math.min(xmn,-0.08); xmx=Math.max(xmx,0.08);
+  ymn=Math.min(ymn,-0.08); ymx=Math.max(ymx,0.08);
+  const pX=72,pY=52;
+  const sc=Math.min((CW-2*pX)/(xmx-xmn),(CH-2*pY)/(ymx-ymn));
+  const ox=pX+(0-xmn)*sc, oy=CH-pY-(0-ymn)*sc;
+  return { sc, px:(x,y)=>[ox+x*sc, oy-y*sc] };
+}
+
+// ═══ Canvas draw helpers ════════════════════════════════════════════════════
+function arw(x1,y1,x2,y2,col,lw,dash){
+  const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy);
+  if(len<3)return;
+  const hs=Math.min(14,len*.22);
+  ctx.save(); ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=lw;
+  ctx.setLineDash(dash||[]);
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  ctx.setLineDash([]);
+  const a=Math.atan2(dy,dx);
+  ctx.beginPath();
+  ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-hs*Math.cos(a-.35),y2-hs*Math.sin(a-.35));
+  ctx.lineTo(x2-hs*.62*Math.cos(a),y2-hs*.62*Math.sin(a));
+  ctx.lineTo(x2-hs*Math.cos(a+.35),y2-hs*Math.sin(a+.35));
+  ctx.closePath(); ctx.fill(); ctx.restore();
+}
+function dln(x1,y1,x2,y2,col,lw,d=[8,5]){
+  ctx.save(); ctx.strokeStyle=col; ctx.lineWidth=lw||1.5; ctx.setLineDash(d);
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  ctx.setLineDash([]); ctx.restore();
+}
+function arc(ox,oy,r,a0,a1,col,lw){
+  ctx.save(); ctx.strokeStyle=col; ctx.lineWidth=lw||1.5; ctx.setLineDash([5,4]);
+  ctx.beginPath(); ctx.arc(ox,oy,r,-Math.max(a0,a1),-Math.min(a0,a1));
+  ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+}
+function lbl(s,x,y,col,sz,bold){
+  ctx.save(); ctx.fillStyle=col||'#ccc';
+  ctx.font=(bold?'bold ':'')+sz+'px "Palatino Linotype",Georgia,serif';
+  ctx.fillText(s,x,y); ctx.restore();
+}
+function midOff(x1,y1,x2,y2,d){
+  const len=Math.hypot(x2-x1,y2-y1)||1;
+  return [(x1+x2)/2-(y2-y1)/len*d,(y1+y2)/2+(x2-x1)/len*d];
+}
+
+// ═══ Grid ════════════════════════════════════════════════════════════════════
+function drawGrid(xf){
+  ctx.save(); ctx.strokeStyle='#0c1528'; ctx.lineWidth=1;
+  for(let v=-3;v<=3;v+=.25){
+    const [ax,ay]=xf.px(v,-3),[bx,by]=xf.px(v,3);
+    ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();
+    const [cx,cy]=xf.px(-3,v),[dx2,dy]=xf.px(3,v);
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(dx2,dy);ctx.stroke();
+  }
+  ctx.strokeStyle='#18283d'; ctx.lineWidth=1.5;
+  const [ax,ay]=xf.px(-3,0),[bx,by]=xf.px(3,0);
+  ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();
+  const [cx,cy]=xf.px(0,-3),[dx2,dy]=xf.px(0,3);
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(dx2,dy);ctx.stroke();
+  ctx.restore();
+}
+
+// ═══ Main draw ═══════════════════════════════════════════════════════════════
+function draw(res, isMot){
+  ctx.clearRect(0,0,CW,CH);
+  ctx.fillStyle='#050910'; ctx.fillRect(0,0,CW,CH);
+  if(!res){ ctx.fillStyle='#f87171'; ctx.font='bold 15px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('UNSTABLE – reduce T or adjust E',CW/2,CH/2); ctx.textAlign='left'; return; }
+
+  const {Ix,Iy,Ex,Ey,del,phi,p1,eInt,cS,cE} = res;
+  const isSal = res.type==='sal';
+
+  // Collect all points for scale
+  const allPts=[[0,0],[Vref,0],[Ix,Iy],[Ex,Ey],p1,eInt,cS,cE];
+  if(isSal) allPts.push(res.D, res.B);
+  const xf=makeXf(allPts);
+
+  drawGrid(xf);
+
+  const O  =xf.px(0,0);
+  const pV =xf.px(Vref,0);
+  const pI =xf.px(Ix,Iy);
+  const pEf=xf.px(Ex,Ey);
+  const pP1=xf.px(p1[0],p1[1]);
+  const pEi=xf.px(eInt[0],eInt[1]);
+  const pCs=xf.px(cS[0],cS[1]);
+  const pCe=xf.px(cE[0],cE[1]);
+
+  // Reference dashed lines
+  dln(pEf[0]-20,pEf[1],pEf[0]+180,pEf[1],'#152340',1,[10,6]);
+  dln(pV[0],pV[1],pV[0],pV[1]+100,'#152340',1,[8,5]);
+
+  // ── Salient pole d-q axes ──
+  if(isSal){
+    const cd=Math.cos(del),sd=Math.sin(del);
+    const R=xf.sc*1.8;
+    // q-axis (along Ef direction)
+    const qx1=O[0]-R*cd, qy1=O[1]+R*sd, qx2=O[0]+R*cd, qy2=O[1]-R*sd;
+    dln(qx1,qy1,qx2,qy2,'#1a4a20',1.2,[6,5]);
+    ctx.save(); ctx.fillStyle='#4ade8066'; ctx.font='bold 11px Inter,sans-serif';
+    ctx.fillText('q',qx2+4,qy2+4); ctx.restore();
+    // d-axis (perpendicular to q)
+    const dx1=O[0]+R*sd, dy1=O[1]+R*cd, dx2=O[0]-R*sd, dy2=O[1]-R*cd;
+    dln(dx1,dy1,dx2,dy2,'#4a1a1a',1.2,[6,5]);
+    ctx.save(); ctx.fillStyle='#ff6b6b66'; ctx.font='bold 11px Inter,sans-serif';
+    ctx.fillText('d',dx1+4,dy1+4); ctx.restore();
+  }
+
+  // Angle arcs
+  const rD=xf.sc*.28, rP=xf.sc*.20;
+  if(Math.abs(del)>0.02) arc(O[0],O[1],rD,Math.min(0,del),Math.max(0,del),'#fb923c',1.8);
+  const Ia=Math.atan2(Iy,Ix);
+  if(Math.abs(Ia)>0.02) arc(O[0],O[1],rP,Math.min(0,Ia),Math.max(0,Ia),'#f87171',1.5);
+
+  // ── Voltage-drop chain ──
+  if(!isSal){
+    // Cylindrical: cS→P1(IRa)→eInt(jIXσ)→cE(jIXa)
+    arw(pCs[0],pCs[1],pP1[0],pP1[1],'#c084fc',2.2);
+    arw(pP1[0],pP1[1],pEi[0],pEi[1],'#34d399',2.2);
+    arw(pEi[0],pEi[1],pCe[0],pCe[1],'#fb923c',2.2);
+  } else {
+    // Salient: cS→P1(IRa)→eInt(jIXσ)→D(Eaq)→cE(Ead)
+    const pD=xf.px(res.D[0],res.D[1]);
+    arw(pCs[0],pCs[1],pP1[0],pP1[1],'#c084fc',2.2);
+    arw(pP1[0],pP1[1],pEi[0],pEi[1],'#34d399',2.2);
+    arw(pEi[0],pEi[1],pD[0], pD[1], '#f59e0b',2.4);  // Eaq
+    arw(pD[0], pD[1], pCe[0],pCe[1],'#38bdf8',2.4);  // Ead
+    // B construction point (dashed, from eInt overshoot along q-axis direction)
+    const pB=xf.px(res.B[0],res.B[1]);
+    dln(pEi[0],pEi[1],pB[0],pB[1],'#2a4a2a',1,[5,4]);
+    ctx.save(); ctx.fillStyle='#4ade8055'; ctx.font='11px serif';
+    ctx.fillText('B',pB[0]+4,pB[1]-4); ctx.restore();
+  }
+
+  // ── Main phasors ──
+  dln(O[0],O[1],pEi[0],pEi[1],isSal?'#2a3a50':'#3a4a60',1.4,[6,4]); // E dashed
+  arw(O[0],O[1],pEf[0],pEf[1],'#60a5fa',3.2);   // Ef
+  arw(O[0],O[1],pV[0], pV[1], '#dde6f5',3.2);   // V
+  arw(O[0],O[1],pI[0], pI[1], '#f87171',3.0);   // I
+
+  // ── Labels ──
+  const LS=Math.max(12,Math.min(16,xf.sc*.11));
+  const LL=LS+2;
+  // Ef
+  const [efLx,efLy]=midOff(O[0],O[1],pEf[0],pEf[1],16);
+  lbl('Ēf',efLx-22,efLy+5,'#60a5fa',LL,true);
+  // V
+  lbl('V̄',pV[0]+8,pV[1]+20,'#dde6f5',LL,true);
+  // I
+  const [iLx,iLy]=midOff(O[0],O[1],pI[0],pI[1],14);
+  lbl('Ī',iLx-12,iLy+5,'#f87171',LL,true);
+  // E (intermediate)
+  lbl('Ē',pEi[0]+5,pEi[1]-6,'#5a7090',LS-1);
+
+  // Chain labels
+  if(!isSal){
+    const [r1x,r1y]=midOff(pCs[0],pCs[1],pP1[0],pP1[1],12);
+    lbl('ĪRₐ',r1x,r1y,'#c084fc',LS-1);
+    const [r2x,r2y]=midOff(pP1[0],pP1[1],pEi[0],pEi[1],12);
+    lbl('jĪXσ',r2x,r2y,'#34d399',LS-1);
+    const [r3x,r3y]=midOff(pEi[0],pEi[1],pCe[0],pCe[1],12);
+    lbl('jĪXₐ',r3x,r3y,'#fb923c',LS-1);
+  } else {
+    const pD=xf.px(res.D[0],res.D[1]);
+    const [r1x,r1y]=midOff(pCs[0],pCs[1],pP1[0],pP1[1],12);
+    lbl('ĪRₐ',r1x,r1y,'#c084fc',LS-1);
+    const [r2x,r2y]=midOff(pP1[0],pP1[1],pEi[0],pEi[1],12);
+    lbl('jĪXσ',r2x,r2y,'#34d399',LS-1);
+    const [r3x,r3y]=midOff(pEi[0],pEi[1],pD[0],pD[1],13);
+    lbl('Eₐq',r3x,r3y,'#f59e0b',LS-1);
+    const [r4x,r4y]=midOff(pD[0],pD[1],pCe[0],pCe[1],13);
+    lbl('Eₐd',r4x,r4y,'#38bdf8',LS-1);
+  }
+
+  // δ and φ labels
+  if(Math.abs(del)>0.04){
+    const a=del/2,r=rD+12;
+    lbl('δ',O[0]+r*Math.cos(a)-5,O[1]-r*Math.sin(a)+5,'#fb923c',LS);
+  }
+  if(Math.abs(Ia)>0.04){
+    const a=Ia/2,r=rP+10;
+    lbl('φ',O[0]+r*Math.cos(a)-4,O[1]-r*Math.sin(a)+5,'#f87171',LS-1);
+  }
+
+  // Salient pole: show I1q and I1d labels near I tip
+  if(isSal && Math.abs(res.I1q)>0.02){
+    const cd=Math.cos(del),sd=Math.sin(del);
+    // I1q projection endpoint: I1q * q-hat
+    const I1q_pt=xf.px(res.I1q*cd, res.I1q*sd);
+    dln(pI[0],pI[1],I1q_pt[0],I1q_pt[1],'#4ade8040',1,[4,3]);
+    ctx.save(); ctx.fillStyle='#4ade8088'; ctx.font='10px serif';
+    ctx.fillText('I₁q',I1q_pt[0]+3,I1q_pt[1]-3); ctx.restore();
+  }
+
+  // Watermark
+  const typeStr=isSal?'SALIENT POLE':'CYLINDRICAL';
+  const modeStr=isMot?'MOTOR':'GENERATOR';
+  ctx.save(); ctx.font='bold 11px "Inter",sans-serif'; ctx.textAlign='right';
+  ctx.fillStyle=isMot?'#e0555544':'#4f8ef744';
+  ctx.fillText(modeStr+' · '+typeStr,CW-12,22); ctx.textAlign='left'; ctx.restore();
+}
+
+// ═══ Update ══════════════════════════════════════════════════════════════════
+function update(){
+  const Emag=+document.getElementById('slE').value;
+  const Traw=+document.getElementById('slT').value;
+  const Ra  =+document.getElementById('slRa').value;
+  const isMot=(mode==='mot'), isSal=(mtype==='sal');
+
+  let res, Tlim;
+  if(!isSal){
+    const Xa=+document.getElementById('slXa').value;
+    const Xs=Xa+X_SIG;
+    Tlim=Emag*Vref/Xs;
+    const T=Math.min(Traw,Tlim*.995);
+    res=solveCyl(Emag,T,Ra,Xs,isMot);
+    document.getElementById('vXa').textContent=Xa.toFixed(2);
+    document.getElementById('vXs').textContent=Xs.toFixed(2);
+  } else {
+    let Xd=+document.getElementById('slXd').value;
+    let Xq=+document.getElementById('slXq').value;
+    if(Xd<=Xq){ Xd=Xq+0.1; document.getElementById('slXd').value=Xd; }
+    Tlim=Emag*Vref/Xd*1.5; // rough approx for salient
+    const T=Math.min(Traw,Tlim*.995);
+    res=solveSal(Emag,T,Ra,Xd,Xq,isMot);
+    document.getElementById('vXd').textContent=Xd.toFixed(2);
+    document.getElementById('vXq').textContent=Xq.toFixed(2);
+  }
+
+  document.getElementById('vE').textContent=Emag.toFixed(2)+' pu';
+  document.getElementById('vT').textContent=Traw.toFixed(2)+' pu';
+  document.getElementById('vRa').textContent=Ra.toFixed(3);
+
+  const warn=document.getElementById('warnMsg');
+  warn.textContent = Traw>=Tlim*.92 ? '⚠ Approaching stability limit!' : '';
+
+  draw(res,isMot);
+  if(!res){
+    warn.textContent='⚠ Unstable – reduce T or adjust parameters';
+    ['dCosphi','dPhi','dDelta','dI','dP','dQ'].forEach(id=>document.getElementById(id).textContent='—');
+    document.getElementById('opVal').textContent='—';
+    return;
+  }
+
+  const {del,phi,Imag,Q,Ix}=res;
+  const P=Vref*Ix, cosPhi=Math.cos(phi);
+  const phiD=phi*180/Math.PI, delD=del*180/Math.PI;
+
+  document.getElementById('dCosphi').textContent=cosPhi.toFixed(3);
+  document.getElementById('dPhi').textContent=phiD.toFixed(1)+'°';
+  document.getElementById('dDelta').textContent=delD.toFixed(1)+'°';
+  document.getElementById('dI').textContent=Imag.toFixed(3);
+  document.getElementById('dP').textContent=P.toFixed(3);
+  document.getElementById('dQ').textContent=Q.toFixed(3);
+
+  const badge=document.getElementById('opBadge'), oval=document.getElementById('opVal');
+  badge.className='opb';
+  let cls,txt;
+  if(Math.abs(phiD)<4){cls='opo'; txt=isMot?'Resistive Motor':'Resistive Generator';}
+  else if(phiD>0){cls='opi'; txt=isMot?'Inductive Motor\n(under-excited)':'Inductive Load\n(over-excited)';}
+  else{cls='opc'; txt=isMot?'Capacitive Motor\n(over-excited)':'Capacitive Load\n(under-excited)';}
+  badge.classList.add(cls);
+  const parts=txt.split('\n');
+  oval.innerHTML=parts[0]+(parts[1]?`<br><span style="font-size:.75em;opacity:.65">${parts[1]}</span>`:'');
+}
+
+// ═══ Event listeners ═════════════════════════════════════════════════════════
+['slE','slT','slRa','slXa','slXd','slXq'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',update);
+});
+
+update();
+</script>
+</body>
+</html>
