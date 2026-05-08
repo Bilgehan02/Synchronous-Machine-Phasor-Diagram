@@ -82,7 +82,6 @@ Or simply download `phasor_diagram.html` and open it locally.
 
 ## 🛠 Built With
 
-- Vanilla JavaScript
 - HTML5 Canvas / SVG
 - No external libraries or dependencies
 
