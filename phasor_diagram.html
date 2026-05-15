@@ -124,6 +124,26 @@ input[type=range].horiz{ width:100%; cursor:pointer; accent-color:var(--blue); }
 /* ── WARN ── */
 .warn{ font-size:.72em; font-weight:600; color:#f87171; text-align:center; min-height:14px; }
 
+/* ── INFO NOTE ── */
+.info-note{
+  width:100%; max-width:1060px;
+  background:#07111f; border:1px solid #1e3a5f;
+  border-left:3px solid #4f8ef7;
+  border-radius:6px; padding:7px 14px;
+  font-size:.72em; color:#6a85aa; line-height:1.6;
+  display:flex; align-items:flex-start; gap:9px;
+}
+.info-note .info-icon{ color:#4f8ef7; font-size:1.1em; flex-shrink:0; margin-top:1px; }
+
+/* ── FOOTER ── */
+.site-footer{
+  font-family:'Cinzel',serif; font-size:.68em; letter-spacing:2px;
+  color:var(--dim2); text-align:center; padding:6px 0 2px;
+  border-top:1px solid var(--border); width:100%; max-width:1060px;
+}
+.site-footer span{ color:#2e4a6a; }
+.site-footer .author{ color:#e05555; font-weight:600; letter-spacing:3px; }
+
 /* ── SALIENT EXTRAS (hidden by default) ── */
 .salient-only{ display:none; }
 .cyl-only{ display:flex; flex-direction:column; gap:7px; }
@@ -249,6 +269,15 @@ body.salient .cyl-only{ display:none; }
 
   </div>
 </div>
+
+<div class="info-note">
+  <span class="info-icon">ℹ</span>
+  <span>Excitation limits, field forcing, and machine power limits are not considered in this simulation. All values are in per-unit (pu) and represent steady-state phasor quantities only.</span>
+</div>
+
+<footer class="site-footer">
+  <span>©</span> <span class="author">Bilgehan HOP</span>
+</footer>
 
 <script>
 // ═══ Constants ═══════════════════════════════════════════════════════════════
